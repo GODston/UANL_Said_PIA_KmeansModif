@@ -20,58 +20,36 @@ def fnPlot(centros, dMax, dMin, own, fitness):
         newArray[i] =  list()
         # Obtenemos valor real de los centros
         centValues = list()
+        dif = dMax[i] - dMin[i]
         for c in centros[i]:
-            dif = dMax[i] - dMin[i]
             cVal = (c * dif) + dMin[i]
-            centValues.append(cVal)
+            centValues.append([cVal, 0])
         # Guardamos array
         for row in range(len(own[i])):
             rowArray = list()
             for col in range(len(own[i][row])):
-                rowArray.append(centValues[own[i][row][col][0]])
+                rowArray.append(centValues[own[i][row][col][0]][0])
+                centValues[own[i][row][col][0]][1] = centValues[own[i][row][col][0]][1] + 1
             newArray[i].append(rowArray)
         # Plot image
         plt.imshow(newArray[i])
-        plt.title('img')
+        plt.title('C1: ' +  str(centValues[0]) + ', C2: ' + str(centValues[1]))
         plt.show()
+        cl = [[centros[i][0], centros[i][0], centros[i][0]], [centros[i][1], centros[i][1], centros[i][1]]]
+        plt.bar([1, 2], [centValues[0][1], centValues[1][1]], width=0.8, color=cl, tick_label = [centValues[0][0], centValues[1][0]])
+        plt.show()
+    return newArray
 
-def logResults(_it, _own, _dVar, dMax, dMin, _mDist):
-    # Obtiene valores
-    dif = []
-    min = []
-    for v in dMax.keys():
-        dif.append(dMax[v] - dMin[v])
-        min.append(dMin[v])
+def logResults(_r):
     # Comienza a loggear
     wb = Workbook()
-    sheet = wb.add_sheet('Introducción')
-    sheet.write(0, 0, 'Hay una hoja para cada proceso de Kmeans con dif. cantidad de centros.')
-    sheet.write(1, 0, 'Se procesa Kmeans hasta que deje de mejorar, por lo que los mejores centros son los mejores.')
-    sheet.write(3, 0, 'Columnas -> ' + str(_dVar.keys()))
     # Muestra los registros
-    for i in range(0, len(_own[2])):
-        reg = []
-        for v in _dVar:
-            reg.append(_dVar[v][i])
-        sheet.write(4 + i, 0, str(reg))
-    # Por cada proceso de n centros
-    for it in _it.keys():
-        sheet = wb.add_sheet(str(it) + ' Centros')
-        r = 0
-        # Muestra los centros
-        for c in _it[it].keys():
-            centro = '['
-            for i in range(0, len(_it[it][c])):
-                centro = centro + str(round((_it[it][c][i] * dif[i]) + min[i], 2)) + ', '
-            centro = centro[:-2]
-            sheet.write(r, 0, 'Centro ' + str(c) + ' -> ' + centro + ']')
-            r = r + 1
-        sheet.write(r, 0, 'Distancia promedio a los centros: ' + str(_mDist[it]))
-        # Muestra pertenencia de registros
-        sheet.write(2 + r, 0, 'Pertenencia de Registros ->')
-        for i in range(0, len(_own[it])):
-            sheet.write(3 + r + i, 0, str(_own[it][i]))
-    wb.save('K_Means.xls')
+    for i in _r.keys():
+        sheet = wb.add_sheet('Matriz de valores ' + str(i))
+        for r in range(len(_r[i])):
+            for c in range(len(_r[i][r])):
+                sheet.write(r, c, str(_r[i][r][c]))
+    wb.save('K_Means_Modif.xls')
     messagebox.showinfo("Archivo Creado", "Se ha creado un archivo con la informacion generada.")
 
 def fnGiftPixels(_own, _i, _pxFit, fcs, fcl, ftObj):
@@ -266,10 +244,17 @@ def fnKmeansNoSup(_StrtCent, _VarNorm, Pnew, _a0, _aa, _ab, _nc, _wn):
     return centros, owner, fCentros
 
 def fnStartCentros(nc, dVMax):
-    # No se usa _nc porque se dan por hecho que son 2 centros
     centros = dict()
     for i in dVMax.keys():
-        centros[i] = [0, 1]
+        centros[i] = list()
+        nextC = 1 / (nc - 1)
+        for n in range(nc):
+            if n == 0:
+                centros[i].append(0)
+            elif n == 1:
+                centros[i].append(1)
+            else:
+                centros[i].append((n - 1) * nextC)
     return centros
 
 def fnGetPnew(_dVar, _i, _r, _c, _wn):
@@ -339,7 +324,7 @@ def fnGetData(_nc, _wn):
     return centrosIniciales, dictVarNorm, dictVarMax, dictVarMin, Pnew
 
 def fnStart():
-    try:
+    #try:
         windowN = 5
         nc = 2
         a0 = (1 / 3) * (1 / nc)
@@ -349,10 +334,10 @@ def fnStart():
         # Se ejecuta el kmeans modificado
         centros, own, fitness = fnKmeansNoSup(dStrtCent, dVarNorm, Pnew, a0, aa, ab, nc, windowN)
         print('Loggeamos resultados.')
-        fnPlot(centros, dMax, dMin, own, fitness)
-        #logResults(it, own, dVar, dMax, dMin, mDist)
-    except:
-        messagebox.showerror("Error al leer el archivo", "Por favor verifique que la ruta y el archivo tengan el formato correcto.\nLa ruta ingresada debe ser una carpeta que contenga solamente 1 imagen en formato *.jpg, de preferencia con dimensiones menores a 500 pixeles.")
+        result = fnPlot(centros, dMax, dMin, own, fitness)
+        logResults(result)
+    #except:
+        #messagebox.showerror("Error al leer el archivo", "Por favor verifique que la ruta y el archivo tengan el formato correcto.\nLa ruta ingresada debe ser una carpeta que contenga solamente 1 imagen en formato *.jpg, de preferencia con dimensiones menores a 500 pixeles.")
 
 
 def fnExaminar():

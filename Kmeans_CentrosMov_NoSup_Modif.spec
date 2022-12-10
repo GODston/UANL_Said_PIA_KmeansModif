@@ -5,7 +5,7 @@ block_cipher = None
 
 
 a = Analysis(
-    ['Kmeans_CentrosMov_NoSup_Modif.py'],
+    ['C:\\Repos\\UANL\\Said\\UANL_Said_PIA_KmeansModif\\Kmeans_CentrosMov_NoSup_Modif.py'],
     pathex=[],
     binaries=[],
     datas=[],
