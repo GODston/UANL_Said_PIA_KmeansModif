@@ -32,23 +32,25 @@ def fnPlot(centros, dMax, dMin, own, fitness):
                 centValues[own[i][row][col][0]][1] = centValues[own[i][row][col][0]][1] + 1
             newArray[i].append(rowArray)
         # Plot image
-        plt.imshow(newArray[i])
-        plt.title('C1: ' +  str(centValues[0]) + ', C2: ' + str(centValues[1]))
-        plt.show()
+        plot = plt
+        plot.imshow(newArray[i])
+        plot.title('C1: ' +  str(centValues[0]) + ', C2: ' + str(centValues[1]))
+        plot.show()
         cl = [[centros[i][0], centros[i][0], centros[i][0]], [centros[i][1], centros[i][1], centros[i][1]]]
-        plt.bar([1, 2], [centValues[0][1], centValues[1][1]], width=0.8, color=cl, tick_label = [centValues[0][0], centValues[1][0]])
-        plt.show()
+        plot.bar([1, 2], [centValues[0][1], centValues[1][1]], width=0.8, color=cl, tick_label = [centValues[0][0], centValues[1][0]])
+        plot.show()
     return newArray
 
-def logResults(_r):
+def logResults(_r, _f, _sd):
     # Comienza a loggear
     wb = Workbook()
     # Muestra los registros
     for i in _r.keys():
         sheet = wb.add_sheet('Matriz de valores ' + str(i))
+        sheet.write(0, 0, 'Fitness: ' + str(_f[i]) + ', Distancias a centrs: ' + str(_sd[i]))
         for r in range(len(_r[i])):
             for c in range(len(_r[i][r])):
-                sheet.write(r, c, str(_r[i][r][c]))
+                sheet.write(r + 2, c, str(_r[i][r][c]))
     wb.save('K_Means_Modif.xls')
     messagebox.showinfo("Archivo Creado", "Se ha creado un archivo con la informacion generada.")
 
@@ -94,9 +96,9 @@ def fnCalcFitness(_VNorm, _Pnew, _cent, _own):
     pxFit = dict()
     # Se obtienen distancias
     print('Calculando distancia de px a nuevos centros')
-    dNorm = fnGetDistCenters(_cent, _VNorm)
+    dNorm, sumDist = fnGetDistCenters(_cent, _VNorm)
     print('Calculando distancia de pnew a nuevos centros')
-    dPnew = fnGetDistCenters(_cent, _Pnew)
+    dPnew, sumDist = fnGetDistCenters(_cent, _Pnew)
     # Por cada imagen
     for i in _cent.keys():
         fCent[i] = list()
@@ -173,14 +175,17 @@ def fnGetOwnership(_distCentro):
 
 def fnGetDistCenters(_c, dVarN):
     distCentro = dict()
+    sumDistCent = dict()
     # Se recorre cada imagen
     for i in _c.keys():
         distCentro[i] = list()
+        sumDistCent[i] = list()
         # Se recorre cada centro
         ic = 0
         for c in _c[i]:
             # Se recorre cada instancia
             distCentTot = []
+            sumDist = 0
             for row in range(len(dVarN[i])):
                 distCentRow = list()
                 for col in range(len(dVarN[i][row])):
@@ -190,16 +195,18 @@ def fnGetDistCenters(_c, dVarN):
                     dist = dist + math.pow((val - c), 2)
                     dcc = math.sqrt(dist)
                     distCentRow.append(dcc)
+                    sumDist = sumDist + dcc
                 distCentTot.append(distCentRow)
             distCentro[i].append(distCentTot)
+            sumDistCent[i].append(sumDist)
             ic = ic + 1
-    return distCentro
+    return distCentro, sumDistCent
 
 def fnKmeansNoSup(_StrtCent, _VarNorm, Pnew, _a0, _aa, _ab, _nc, _wn):
     print('Inicia Kmeans.')
     # Asignamos registros a centros
     print('Obtener distancia a centros.')
-    distCentro = fnGetDistCenters(_StrtCent, _VarNorm)
+    distCentro, sumDist = fnGetDistCenters(_StrtCent, _VarNorm)
     print('Asignamos registros a centros')
     owner = fnGetOwnership(distCentro)
     # Centramos los centros en sus grupos
@@ -232,7 +239,7 @@ def fnKmeansNoSup(_StrtCent, _VarNorm, Pnew, _a0, _aa, _ab, _nc, _wn):
             # - Paso 8
             # Asignamos registros a centros
             print('Obtener distancia a centros.')
-            distCentro = fnGetDistCenters(centros, _VarNorm)
+            distCentro, sumDist = fnGetDistCenters(centros, _VarNorm)
             print('Asignamos registros a centros')
             owner = fnGetOwnership(distCentro)
             # Centramos los centros en sus grupos
@@ -241,7 +248,7 @@ def fnKmeansNoSup(_StrtCent, _VarNorm, Pnew, _a0, _aa, _ab, _nc, _wn):
             # - Paso 9
             _aa = _a0
             _ab = _ab  - (_ab / _nc)
-    return centros, owner, fCentros
+    return centros, owner, fCentros, sumDist
 
 def fnStartCentros(nc, dVMax):
     centros = dict()
@@ -332,10 +339,10 @@ def fnStart():
         ab = copy.deepcopy(a0)
         dStrtCent, dVarNorm, dMax, dMin, Pnew = fnGetData(nc, windowN)
         # Se ejecuta el kmeans modificado
-        centros, own, fitness = fnKmeansNoSup(dStrtCent, dVarNorm, Pnew, a0, aa, ab, nc, windowN)
+        centros, own, fitness, sumDist = fnKmeansNoSup(dStrtCent, dVarNorm, Pnew, a0, aa, ab, nc, windowN)
         print('Loggeamos resultados.')
         result = fnPlot(centros, dMax, dMin, own, fitness)
-        logResults(result)
+        logResults(result, fitness, sumDist)
     #except:
         #messagebox.showerror("Error al leer el archivo", "Por favor verifique que la ruta y el archivo tengan el formato correcto.\nLa ruta ingresada debe ser una carpeta que contenga solamente 1 imagen en formato *.jpg, de preferencia con dimensiones menores a 500 pixeles.")
 
