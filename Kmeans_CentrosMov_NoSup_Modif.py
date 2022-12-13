@@ -12,6 +12,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 # Definicion de funciones
+NC = 2
 
 def fnPlot(centros, dMax, dMin, own, fitness):
     newArray = dict()
@@ -36,8 +37,19 @@ def fnPlot(centros, dMax, dMin, own, fitness):
         plot.imshow(newArray[i])
         plot.title('C1: ' +  str(centValues[0]) + ', C2: ' + str(centValues[1]))
         plot.show()
-        cl = [[centros[i][0], centros[i][0], centros[i][0]], [centros[i][1], centros[i][1], centros[i][1]]]
-        plot.bar([1, 2], [centValues[0][1], centValues[1][1]], width=0.8, color=cl, tick_label = [centValues[0][0], centValues[1][0]])
+        cl = []
+        tot = 0
+        indx = []
+        val = []
+        lbl = []
+        for ran in range(len(centros[i])):
+            cl.append([centros[i][ran], centros[i][ran], centros[i][ran]])
+            tot = tot + centValues[ran][1]
+            indx.append(ran + 1)
+            lbl.append(round(centValues[ran][0], 4))
+        for ran in range(len(centros[i])):
+            val.append((centValues[ran][1] / tot) * 100)
+        plot.bar(indx, val, width=0.8, color=cl, tick_label = lbl)
         plot.show()
     return newArray
 
@@ -333,7 +345,7 @@ def fnGetData(_nc, _wn):
 def fnStart():
     #try:
         windowN = 5
-        nc = 2
+        nc = NC
         a0 = (1 / 3) * (1 / nc)
         aa = copy.deepcopy(a0)
         ab = copy.deepcopy(a0)
