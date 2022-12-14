@@ -343,7 +343,7 @@ def fnGetData(_nc, _wn):
     return centrosIniciales, dictVarNorm, dictVarMax, dictVarMin, Pnew
 
 def fnStart():
-    #try:
+    try:
         windowN = 5
         nc = NC
         a0 = (1 / 3) * (1 / nc)
@@ -355,8 +355,8 @@ def fnStart():
         print('Loggeamos resultados.')
         result = fnPlot(centros, dMax, dMin, own, fitness)
         logResults(result, fitness, sumDist)
-    #except:
-        #messagebox.showerror("Error al leer el archivo", "Por favor verifique que la ruta y el archivo tengan el formato correcto.\nLa ruta ingresada debe ser una carpeta que contenga solamente 1 imagen en formato *.jpg, de preferencia con dimensiones menores a 500 pixeles.")
+    except:
+        messagebox.showerror("Error al leer el archivo", "Por favor verifique que la ruta y el archivo tengan el formato correcto.\nLa ruta ingresada debe ser una carpeta que contenga solamente 1 imagen en formato *.jpg, de preferencia con dimensiones menores a 500 pixeles.")
 
 
 def fnExaminar():
